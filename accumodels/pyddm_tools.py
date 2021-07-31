@@ -18,7 +18,7 @@ from ddm import models
 from ddm import Model, Fittable, Fitted, Bound, Overlay, Solution
 from ddm.models.loss import LossFunction
 from ddm.functions import fit_adjust_model, display_model
-from ddm.models import DriftConstant, NoiseConstant, BoundConstant, OverlayChain, OverlayNonDecision, OverlayPoissonMixture, OverlayUniformMixture, InitialCondition, ICPoint, ICPointSourceCenter, LossBIC, LossRobustBIC, LossBICGonogo, LossRobustBICGonogo
+from ddm.models import DriftConstant, NoiseConstant, BoundConstant, OverlayChain, OverlayNonDecision, OverlayPoissonMixture, OverlayUniformMixture, InitialCondition, ICPoint, ICPointSourceCenter, LossBIC, LossRobustBIC#, LossBICGonogo, LossRobustBICGonogo
 # from ddm import set_N_cpus
 
 from IPython import embed as shell
@@ -256,7 +256,7 @@ class DriftPulse_reward(ddm.models.Drift):
         else:
             return 0
 
-def make_drift_one_accumulator(sample, drift_bias, leak, v_depends_on=[None], b_depends_on=[None], k_depends_on=[None], a_depends_on=[None]):
+def make_drift_one_accumulator(sample, drift_bias, v_depends_on=[None], b_depends_on=[None], a_depends_on=[None]):
     
     v_names, v_unique_conditions = get_param_names(sample=sample, depends_on=v_depends_on, param='v')
     a_names, a_unique_conditions = get_param_names(sample=sample, depends_on=a_depends_on, param='a')
@@ -264,14 +264,14 @@ def make_drift_one_accumulator(sample, drift_bias, leak, v_depends_on=[None], b_
         b_names, b_unique_conditions = get_param_names(sample=sample, depends_on=b_depends_on, param='b')
     else:
         b_names = []
-    if leak:
-        k_names, k_unique_conditions = get_param_names(sample=sample, depends_on=k_depends_on, param='k')
-    else:
-        k_names = []
+#    if leak:
+#        k_names, k_unique_conditions = get_param_names(sample=sample, depends_on=k_depends_on, param='k')
+#    else:
+#        k_names = []
     
     class DriftPulse(ddm.models.Drift):
         name = 'Drift'
-        required_parameters = v_names + b_names + k_names + a_names
+        required_parameters = v_names + b_names + a_names
         required_conditions = ['start', 'duration']
         if (v_depends_on is not None):
             required_conditions = list(set(required_conditions+v_depends_on))
@@ -311,31 +311,31 @@ def make_drift_one_accumulator(sample, drift_bias, leak, v_depends_on=[None], b_
             else:
                 b_param = 0
 
-            if leak:
+#            if leak:
                 # b param:
-                if k_depends_on is None:
-                    k_param = self.k
-                elif len(k_unique_conditions) == 1:
-                    k_param = getattr(self, 'k{}'.format(conditions[k_depends_on[0]]))
-                elif len(b_unique_conditions) == 2:
-                    k_param = getattr(self, 'k{}.{}'.format(conditions[k_depends_on[0]],conditions[k_depends_on[1]]))
-            else:
-                k_param = 0
+#                if k_depends_on is None:
+#                    k_param = self.k
+#                elif len(k_unique_conditions) == 1:
+#                    k_param = getattr(self, 'k{}'.format(conditions[k_depends_on[0]]))
+#                elif len(b_unique_conditions) == 2:
+#                   k_param = getattr(self, 'k{}.{}'.format(conditions[k_depends_on[0]],conditions[k_depends_on[1]]))
+#           else:
+#                k_param = 0
 
             # return:
-            k_target = 10 - a_param
+#            k_target = 10 - a_param
 
-            print(k_target)
+#            print(k_target)
             # print(t)
 
             # shell()
 
-            if t < conditions['start']:
-                return b_param - (k_param * (x-k_target))
-            elif (t >= conditions['start']) & (t < (conditions['start']+conditions['duration'])):
-                return v_param + b_param - (k_param * (x-k_target))
-            else:
-                return 0
+#            if t < conditions['start']:
+#                return b_param - (k_param * (x-k_target))
+#            elif (t >= conditions['start']) & (t < (conditions['start']+conditions['duration'])):
+#                return v_param + b_param - (k_param * (x-k_target))
+#            else:
+#                return 0
 
     return DriftPulse
 
@@ -412,35 +412,35 @@ def make_z(sample, z_depends_on=[None]):
             if z_depends_on is None:
                 z_param = self.z
             elif len(z_unique_conditions) == 1:
-                z_param = getattr(self, 'z{}'.format(conditions[z_depends_on[0]]))
+                z_param = hasattr(self, 'z{}'.format(conditions[z_depends_on[0]]))
             elif len(z_unique_conditions) == 2:
-                z_param = getattr(self, 'z{}.{}'.format(conditions[z_depends_on[0]],conditions[z_depends_on[1]]))
+                z_param = hasattr(self, 'z{}.{}'.format(conditions[z_depends_on[0]],conditions[z_depends_on[1]]))
             pdf[int(len(pdf)*z_param)] = 1
             return pdf
     return StartingPoint
 
-def make_drift(sample, drift_bias, leak, v_depends_on=[None], b_depends_on=[None], k_depends_on=[None]):
+def make_drift(sample, drift_bias, v_depends_on=[None], b_depends_on=[None]):
     
     v_names, v_unique_conditions = get_param_names(sample=sample, depends_on=v_depends_on, param='v')
     if drift_bias:
         b_names, b_unique_conditions = get_param_names(sample=sample, depends_on=b_depends_on, param='b')
     else:
         b_names = []
-    if leak:
-        k_names, k_unique_conditions = get_param_names(sample=sample, depends_on=k_depends_on, param='k')
-    else:
-        k_names = []
+#    if leak:
+#        k_names, k_unique_conditions = get_param_names(sample=sample, depends_on=k_depends_on, param='k')
+#    else:
+ #      k_names = []
 
     class DriftStimulusCoding(ddm.models.Drift):
         name = 'Drift'
-        required_parameters = v_names + b_names + k_names
+        required_parameters = v_names + b_names #+ k_names
         required_conditions = ['stimulus']
         if (v_depends_on is not None):
             required_conditions = list(set(required_conditions+v_depends_on))
         if (b_depends_on is not None):
             required_conditions = list(set(required_conditions+b_depends_on))
-        if (k_depends_on is not None):
-            required_conditions = list(set(required_conditions+k_depends_on))
+#        if (k_depends_on is not None):
+#            required_conditions = list(set(required_conditions+k_depends_on))
 
         def get_drift(self, x, conditions, **kwargs):
             
@@ -448,35 +448,33 @@ def make_drift(sample, drift_bias, leak, v_depends_on=[None], b_depends_on=[None
             if v_depends_on is None:
                 v_param = self.v
             elif len(v_unique_conditions) == 1:
-                v_param = getattr(self, 'v{}'.format(conditions[v_depends_on[0]]))
+                v_param = hasattr(self, 'v{}'.format(conditions[v_depends_on[0]]))
             elif len(v_unique_conditions) == 2:
-                v_param = getattr(self, 'v{}.{}'.format(conditions[v_depends_on[0]],conditions[v_depends_on[1]]))
+                v_param = hasattr(self, 'v{}.{}'.format(conditions[v_depends_on[0]],conditions[v_depends_on[1]]))
 
             if drift_bias:
                 # b param:
                 if b_depends_on is None:
                     b_param = self.b
                 elif len(b_unique_conditions) == 1:
-                    b_param = getattr(self, 'b{}'.format(conditions[b_depends_on[0]]))
+                    b_param = hasattr(self, 'b{}'.format(conditions[b_depends_on[0]]))
                 elif len(b_unique_conditions) == 2:
-                    b_param = getattr(self, 'b{}.{}'.format(conditions[b_depends_on[0]],conditions[b_depends_on[1]]))
+                    b_param = hasattr(self, 'b{}.{}'.format(conditions[b_depends_on[0]],conditions[b_depends_on[1]]))
 
-            if leak:
+#            if leak:
                 # b param:
-                if k_depends_on is None:
-                    k_param = self.k
-                elif len(k_unique_conditions) == 1:
-                    k_param = getattr(self, 'k{}'.format(conditions[k_depends_on[0]]))
-                elif len(b_unique_conditions) == 2:
-                    k_param = getattr(self, 'k{}.{}'.format(conditions[k_depends_on[0]],conditions[k_depends_on[1]]))
+#                if k_depends_on is None:
+#                    k_param = self.k
+#                elif len(k_unique_conditions) == 1:
+#                    k_param = getattr(self, 'k{}'.format(conditions[k_depends_on[0]]))
+#                elif len(b_unique_conditions) == 2:
+#                    k_param = getattr(self, 'k{}.{}'.format(conditions[k_depends_on[0]],conditions[k_depends_on[1]]))
 
             # return:
-            if drift_bias & leak:
-                return (v_param * conditions['stimulus']) + b_param - (k_param * x)
-            elif drift_bias:
+            if drift_bias:
                 return (v_param * conditions['stimulus']) + b_param
-            elif leak:
-                return (v_param * conditions['stimulus']) - (k_param * x)
+#            elif leak:
+#                return (v_param * conditions['stimulus']) - (k_param * x)
             else:
                 return (v_param * conditions['stimulus'])
     return DriftStimulusCoding
@@ -505,21 +503,26 @@ def make_a(sample, urgency, a_depends_on=[None], u_depends_on=[None]):
             if a_depends_on is None:
                 a_param = self.a
             elif len(a_unique_conditions) == 1:
-                a_param = getattr(self, 'a{}'.format(conditions[a_depends_on[0]]))
+                a_param = hasattr(self, 'a{}'.format(conditions[a_depends_on[0]]))
             elif len(a_unique_conditions) == 2:
-                a_param = getattr(self, 'a{}.{}'.format(conditions[a_depends_on[0]],conditions[a_depends_on[1]]))
+                a_param = hasattr(self, 'a{}.{}'.format(conditions[a_depends_on[0]],conditions[a_depends_on[1]]))
             
             if urgency:
                 # u param:
                 if u_depends_on is None:
                     u_param = self.u
                 elif len(u_unique_conditions) == 1:
-                    u_param = getattr(self, 'u{}'.format(conditions[u_depends_on[0]]))
+                    u_param = hasattr(self, 'u{}'.format(conditions[u_depends_on[0]]))
                 elif len(u_unique_conditions) == 2:
-                    u_param = getattr(self, 'u{}.{}'.format(conditions[u_depends_on[0]],conditions[u_depends_on[1]]))
+                    u_param = hasattr(self, 'u{}.{}'.format(conditions[u_depends_on[0]],conditions[u_depends_on[1]]))
                 
             # return:
-                return a_param-(a_param*(t/(t+u_param)))
+              
+                if t + u_param == 0 :
+                    res = 0
+                else:
+                    res = a_param - (a_param * ( t / ( t + u_param ) ) )
+                return res
             else:
                 return a_param
     return BoundCollapsingHyperbolic
@@ -545,9 +548,9 @@ def make_t(sample, t_depends_on=[None]):
             if t_depends_on is None:
                 t_param = self.t
             elif len(t_unique_conditions) == 1:
-                t_param = getattr(self, 't{}'.format(cond[t_depends_on[0]]))
+                t_param = hasattr(self, 't{}'.format(cond[t_depends_on[0]]))
             elif len(t_unique_conditions) == 2:
-                t_param = getattr(self, 't{}.{}'.format(cond[t_depends_on[0]],cond[t_depends_on[1]]))
+                t_param = hasattr(self, 't{}.{}'.format(cond[t_depends_on[0]],cond[t_depends_on[1]]))
             
             shifts = int(t_param/m.dt) # truncate
             # Shift the distribution
@@ -658,7 +661,7 @@ def make_model_one_accumulator(sample, model_settings):
             # 'z':(0.75,0.999),              # starting point --> translates into bound heigth 0-5
             'v':(0,25),                      # drift rate
             'b':(-5,5),                      # drift bias
-            'k':(0,5),                       # leak
+#            'k':(0,5),                       # leak
             'a':(0.1,5),                     # bound
             't':(0,.1),                      # non-decision time
             'lapse':(0.001,0.999),           # lapse rate
@@ -680,15 +683,15 @@ def make_model_one_accumulator(sample, model_settings):
         b0_value = 0
         b1_value = 0
 
-    if model_settings['leak'] & (model_settings['depends_on']['k'] == ['reward']):
-        k0_value = Fittable(minval=ranges['k'][0], maxval=ranges['k'][1], default=1)
-        k1_value = Fittable(minval=ranges['k'][0], maxval=ranges['k'][1], default=1)
-    elif model_settings['leak'] & (model_settings['depends_on']['k'] is None):
-        k0_value = Fittable(minval=ranges['k'][0], maxval=ranges['k'][1], default=1)
-        k1_value = k0_value
-    else:
-        k0_value = 0
-        k1_value = 0
+#    if model_settings['leak'] & (model_settings['depends_on']['k'] == ['reward']):
+#        k0_value = Fittable(minval=ranges['k'][0], maxval=ranges['k'][1], default=1)
+#        k1_value = Fittable(minval=ranges['k'][0], maxval=ranges['k'][1], default=1)
+#    elif model_settings['leak'] & (model_settings['depends_on']['k'] is None):
+#        k0_value = Fittable(minval=ranges['k'][0], maxval=ranges['k'][1], default=1)
+#        k1_value = k0_value
+#    else:
+#        k0_value = 0
+#        k1_value = 0
 
     if model_settings['lapse'] & (model_settings['depends_on']['lapse'] == ['reward']):
         lapse0_value = Fittable(minval=ranges['lapse'][0], maxval=ranges['lapse'][1], default=0.1)
@@ -715,8 +718,8 @@ def make_model_one_accumulator(sample, model_settings):
     drift_components = {
                         'v0':v0_value,
                         'v1':v1_value,
-                        'k0':k0_value,
-                        'k1':k1_value,
+ #                       'k0':k0_value,
+ #                       'k1':k1_value,
                         'b0':b0_value, 
                         'b1':b1_value,
                         'a0':a0_value, 
@@ -800,10 +803,10 @@ def make_model(sample, model_settings):
                 z_depends_on=model_settings['depends_on']['z'])
     drift = make_drift(sample=sample, 
                         drift_bias=model_settings['drift_bias'], 
-                        leak=model_settings['leak'], 
+#                        leak=model_settings['leak'], 
                         v_depends_on=model_settings['depends_on']['v'], 
-                        b_depends_on=model_settings['depends_on']['b'],
-                        k_depends_on=model_settings['depends_on']['k'])
+                        b_depends_on=model_settings['depends_on']['b'])
+ #                       k_depends_on=model_settings['depends_on']['k'])
     a = make_a(sample=sample, 
                 urgency=model_settings['urgency'], 
                 a_depends_on=model_settings['depends_on']['a'], 
@@ -986,6 +989,7 @@ def simulate_data_gonogo(params, model_settings, subj_idx, nr_trials=10000, rt_c
     # make model:
     model = make_model_one_accumulator(sample=sample, model_settings=model_settings)
 
+    
     # set fitted parameters:
     param_names = model.get_model_parameter_names()
     params_to_set = [Fitted(params.loc[(params['subj_idx']==subj_idx), param]) for param in param_names]
